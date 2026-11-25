@@ -1,0 +1,10 @@
+# Held-out benchmark — evaluates every checkpoint on the identical holdout.
+# "base" uses the raw Qwen model; "sft"/"grpo" point at trained adapters.
+base_model: Qwen/Qwen2.5-0.5B-Instruct
+holdout_file: data/benchmark/holdout.jsonl
+seed: 42
+limit: null            # null = all rows; set an int for a quick CPU smoke test
+models:
+  base: ""
+  sft: runs/sft/adapter
+  sft_grpo: runs/grpo/adapter

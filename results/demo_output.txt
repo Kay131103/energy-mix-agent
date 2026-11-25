@@ -1,0 +1,28 @@
+# Validator demo (local CPU, no training involved)
+
+## Scenario sc_245445
+- grid-only cost: ₹16637
+- LP optimum cost: ₹11559 (carbon-free share 63%)
+- reward(LP plan)          = 1.0
+- reward(greedy heuristic) = 0.0  (cost gap None%, violations: ['carbon_share'])
+- reward(corrupted JSON)   = 0.0  (violations: ['hour_0:missing_field']...)
+
+## Scenario sc_725849
+- grid-only cost: ₹15523
+- LP optimum cost: ₹10345 (carbon-free share 68%)
+- reward(LP plan)          = 1.0
+- reward(greedy heuristic) = 0.8258  (cost gap 4.3545279465847635%, violations: none)
+- reward(corrupted JSON)   = 0.0  (violations: ['hour_0:missing_field']...)
+
+## Scenario sc_090300
+- grid-only cost: ₹16763
+- LP optimum cost: ₹11574 (carbon-free share 67%)
+- reward(LP plan)          = 1.0
+- reward(greedy heuristic) = 0.8181  (cost gap 4.546755821402627%, violations: none)
+- reward(corrupted JSON)   = 0.0  (violations: ['hour_0:missing_field']...)
+
+## Bill grader
+- reward(correct bill)     = 1.0 (field_acc 1.0)
+- reward(wrong total)      = 0.4167 (violations ['arithmetic_total'])
+
+Rewards are computed by code only — no LLM judge anywhere.

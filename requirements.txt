@@ -1,0 +1,10 @@
+# Colab / GPU training environment
+torch>=2.2
+transformers>=4.46
+datasets>=3.0
+peft>=0.13
+trl>=0.12
+accelerate>=1.0
+scipy>=1.11
+numpy>=1.26
+pyyaml>=6.0

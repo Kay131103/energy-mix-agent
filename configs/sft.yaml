@@ -1,0 +1,17 @@
+# Stage 1 — LoRA SFT config (reproducible: pinned seed + all hyperparams)
+model_id: Qwen/Qwen2.5-0.5B-Instruct
+seed: 42
+train_file: data/sft/train.jsonl
+val_file: data/sft/val.jsonl
+output_dir: runs/sft
+epochs: 3
+lr: 0.0002
+batch_size: 8
+grad_accum: 2
+eval_steps: 100
+max_seq_len: 1536
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]

@@ -1,0 +1,8 @@
+# generated datasets are committed (small); uncomment to ignore
+# data/
+runs/
+results/*.json
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env

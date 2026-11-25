@@ -1,0 +1,21 @@
+# Stage 2 — GRPO with programmatic validator rewards
+model_id: Qwen/Qwen2.5-0.5B-Instruct
+adapter_dir: runs/sft/adapter     # start GRPO from the SFT checkpoint (empty = base model)
+prompts_file: data/grpo/prompts.jsonl
+output_dir: runs/grpo
+seed: 42
+epochs: 1
+lr: 0.00005
+batch_size: 4          # must be divisible by num_generations
+grad_accum: 8
+num_generations: 4
+max_prompt_tokens: 1024
+max_completion_tokens: 512
+temperature: 0.9
+beta: 0.001            # small KL to reference (verifiable reward dominates)
+save_steps: 100
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
