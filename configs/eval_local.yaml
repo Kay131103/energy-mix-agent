@@ -1,9 +1,10 @@
 # Quick local CPU eval: limited rows so it finishes in minutes.
-# Set limit to null for the full holdout (slow on CPU).
+# max_new_tokens: plan JSONs are ~600-700 tokens; below that they truncate.
 base_model: Qwen/Qwen2.5-0.5B-Instruct
 holdout_file: data/benchmark/holdout.jsonl
 seed: 42
 limit: 15
+max_new_tokens: 800
 models:
   base: ""
   sft: runs/sft_local/adapter

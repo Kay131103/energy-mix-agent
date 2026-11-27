@@ -23,7 +23,7 @@ from src.validator.dispatch_solver import Scenario, solve_plan, validate_plan
 from src.validator.bill_validator import validate_bill
 
 
-def generate(model, tok, messages, max_new_tokens=600):
+def generate(model, tok, messages, max_new_tokens=768):
     prompt = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     ids = tok(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
@@ -38,12 +38,12 @@ def extract_json(text: str) -> str:
     return text[a:b + 1] if (a != -1 and b > a) else text
 
 
-def eval_rows(model, tok, rows, limit=None) -> dict:
+def eval_rows(model, tok, rows, limit=None, max_new_tokens=768) -> dict:
     res = {"n": 0, "json_ok": 0, "reward_sum": 0.0, "rewards": [], "cost_gaps": []}
     for row in rows[:limit or len(rows)]:
         res["n"] += 1
         t0 = time.time()
-        comp = extract_json(generate(model, tok, row["prompt"]))
+        comp = extract_json(generate(model, tok, row["prompt"], max_new_tokens))
         if row["task"] == "plan":
             scen = Scenario.from_dict(row["scenario"])
             opt = solve_plan(scen)
@@ -67,6 +67,7 @@ def eval_rows(model, tok, rows, limit=None) -> dict:
 
 def main(cfg_path: str):
     cfg = yaml.safe_load(open(cfg_path, encoding="utf-8"))
+    max_new = int(cfg.get("max_new_tokens", 768))
     rows = [json.loads(l) for l in open(cfg["holdout_file"], encoding="utf-8")]
     plans = [r for r in rows if r["task"] == "plan"]
     bills = [r for r in rows if r["task"] == "bill"]
@@ -81,8 +82,8 @@ def main(cfg_path: str):
             from peft import PeftModel
             model = PeftModel.from_pretrained(model, adapter).merge_and_unload()
         model.eval()
-        m = {"plan": eval_rows(model, tok, plans, cfg.get("limit")),
-             "bill": eval_rows(model, tok, bills, cfg.get("limit"))}
+        m = {"plan": eval_rows(model, tok, plans, cfg.get("limit"), max_new),
+             "bill": eval_rows(model, tok, bills, cfg.get("limit"), max_new)}
         out["models"][tag] = m
         del model
         if torch.cuda.is_available():
