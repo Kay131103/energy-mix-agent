@@ -49,22 +49,27 @@ def main(cfg_path: str):
         target_modules=cfg["lora"]["target_modules"], task_type="CAUSAL_LM",
     )
 
-    grpo_cfg = GRPOConfig(
+    import dataclasses
+    valid_fields = {f.name for f in dataclasses.fields(GRPOConfig)}
+    wanted = dict(
         output_dir=cfg["output_dir"], seed=cfg["seed"],
         learning_rate=cfg["lr"],
         per_device_train_batch_size=cfg["batch_size"],
         gradient_accumulation_steps=cfg["grad_accum"],
         num_generations=cfg["num_generations"],
         max_completion_length=cfg["max_completion_tokens"],
-        max_prompt_length=cfg["max_prompt_tokens"],
+        max_prompt_length=cfg.get("max_prompt_tokens"),
         temperature=cfg["temperature"],
         beta=cfg["beta"],
         num_train_epochs=cfg["epochs"],
         max_steps=cfg.get("max_steps", -1),
         logging_steps=5, save_strategy="steps", save_steps=cfg["save_steps"],
-        save_total_limit=2, bf16=torch.cuda.is_available(), report_to=[],
+        save_total_limit=2, report_to=[],
+        bf16=torch.cuda.is_available(),
         use_cpu=not torch.cuda.is_available(),
     )
+    grpo_cfg = GRPOConfig(**{k: v for k, v in wanted.items()
+                             if v is not None and k in valid_fields})
     trainer = GRPOTrainer(
         model=model, args=grpo_cfg, train_dataset=ds,
         reward_funcs=plan_reward if task == "plan" else bill_reward,
