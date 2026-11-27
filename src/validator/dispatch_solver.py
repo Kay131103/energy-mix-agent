@@ -149,11 +149,17 @@ CAP_TOL = 0.5          # kWh, cap tolerance
 MAX_GAP_PCT = 25.0     # cost gap that maps to reward 0
 
 
+def extract_json(text: str) -> str:
+    """Tolerant extraction: strip markdown fences / prose, keep the outermost {...}."""
+    a, b = text.find("{"), text.rfind("}")
+    return text[a:b + 1] if (a != -1 and b > a) else text
+
+
 def validate_plan(scen: Scenario, completion: str, optimal_cost: float | None = None) -> dict:
     """Programmatic grader. Returns {"violations": [...], "cost": ..., "reward": float}."""
     v: list[str] = []
     try:
-        plan = json.loads(completion)
+        plan = json.loads(extract_json(completion))
         hours = plan["hours"]
         assert isinstance(hours, list) and len(hours) == _h(scen)
     except Exception:

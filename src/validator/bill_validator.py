@@ -6,10 +6,12 @@ import json
 FIELDS = ["period", "total_kwh", "energy_charge", "fixed_charge", "tax", "total_due"]
 MONEY_TOL = 0.05  # INR
 
+from src.validator.dispatch_solver import extract_json  # shared tolerant parser
+
 
 def validate_bill(completion: str, truth: dict) -> dict:
     try:
-        pred = json.loads(completion)
+        pred = json.loads(extract_json(completion))
         assert isinstance(pred, dict)
     except Exception:
         return {"violations": ["unparseable_json"], "field_acc": 0.0, "reward": 0.0}

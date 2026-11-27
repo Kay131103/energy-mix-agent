@@ -45,6 +45,11 @@ def test_bill_grader():
     bad = validate_bill(json.dumps({**b["truth"], "total_due": 1.0}), b["truth"])
     assert bad["reward"] < 0.99
     assert validate_bill("not json", b["truth"])["reward"] == 0.0
+    # tolerant parsing: fenced / prose-wrapped JSON still gets full credit
+    fenced = "```json\n" + json.dumps(b["truth"]) + "\n```"
+    assert validate_bill(fenced, b["truth"])["reward"] >= 0.99
+    wrapped = "Answer: " + json.dumps(b["truth"])
+    assert validate_bill(wrapped, b["truth"])["reward"] >= 0.99
 
 
 def test_scenarios_round_trip():
