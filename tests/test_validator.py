@@ -38,6 +38,26 @@ def test_unparseable_completion_scores_zero():
     assert validate_plan(scen, "I think the answer is maybe", 100.0)["reward"] == 0.0
 
 
+def test_rewards_accept_conversational_completions():
+    """TRL 1.x conversational mode passes completions as chat-message dicts."""
+    import json
+
+    from src.validator.rewards import bill_reward, plan_reward
+    b = make_bill(RNG(6))
+    truth = [b["truth"], b["truth"]]
+    comps = [[{"role": "assistant", "content": json.dumps(b["truth"])}] for _ in range(2)]
+    assert bill_reward(["p"] * 2, comps, truth=truth) == [1.0, 1.0]
+    # string form still works
+    assert bill_reward(["p"], [json.dumps(b["truth"])], truth=[b["truth"]]) == [1.0]
+    # plan task conversational: known-good plan scores high
+    scen = make_scenario(RNG(1))
+    sol = solve_plan(scen)
+    plan_comps = [[{"role": "assistant", "content": json.dumps(sol.plan)}]]
+    r = plan_reward(["p"], plan_comps, scenario=[scen.to_dict()],
+                    reference=['{}'])[0]
+    assert r >= 0.99
+
+
 def test_bill_grader():
     b = make_bill(RNG(4))
     good = validate_bill(json.dumps(b["truth"]), b["truth"])
