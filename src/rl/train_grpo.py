@@ -20,7 +20,7 @@ from peft import LoraConfig, PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOConfig, GRPOTrainer
 
-from src.validator.rewards import plan_reward
+from src.validator.rewards import plan_reward, bill_reward
 
 
 def main(cfg_path: str):
