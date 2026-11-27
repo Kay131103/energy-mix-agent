@@ -1,0 +1,10 @@
+# Quick local CPU eval: limited rows so it finishes in minutes.
+# Set limit to null for the full holdout (slow on CPU).
+base_model: Qwen/Qwen2.5-0.5B-Instruct
+holdout_file: data/benchmark/holdout.jsonl
+seed: 42
+limit: 15
+models:
+  base: ""
+  sft: runs/sft_local/adapter
+  sft_grpo: runs/grpo_local/adapter

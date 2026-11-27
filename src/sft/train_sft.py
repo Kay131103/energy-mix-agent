@@ -23,12 +23,16 @@ def main(cfg_path: str):
     random.seed(cfg["seed"])
 
     tok = AutoTokenizer.from_pretrained(cfg["model_id"])
+    # CPU-safe dtype: bf16 needs AVX512; fall back to float32 when no GPU
+    dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
     model = AutoModelForCausalLM.from_pretrained(
-        cfg["model_id"], torch_dtype=torch.bfloat16, attn_implementation="sdpa"
+        cfg["model_id"], torch_dtype=dtype, attn_implementation="sdpa"
     )
 
     ds = load_dataset("json", data_files={
         "train": cfg["train_file"], "validation": cfg["val_file"]})
+    if cfg.get("eval_limit"):
+        ds["validation"] = ds["validation"].select(range(cfg["eval_limit"]))
 
     lora = LoraConfig(
         r=cfg["lora"]["r"], lora_alpha=cfg["lora"]["alpha"],
@@ -38,21 +42,28 @@ def main(cfg_path: str):
 
     sft_cfg = SFTConfig(
         output_dir=cfg["output_dir"],
-        num_train_epochs=cfg["epochs"],
+        num_train_epochs=cfg.get("epochs", 3),
         learning_rate=cfg["lr"],
         per_device_train_batch_size=cfg["batch_size"],
         gradient_accumulation_steps=cfg["grad_accum"],
         per_device_eval_batch_size=cfg["batch_size"],
         eval_strategy="steps", eval_steps=cfg["eval_steps"],
         save_strategy="steps", save_steps=cfg["eval_steps"],
-        save_total_limit=2, logging_steps=10, bf16=True, seed=cfg["seed"],
+        save_total_limit=2, logging_steps=10, bf16=torch.cuda.is_available(),
+        use_cpu=not torch.cuda.is_available(), seed=cfg["seed"],
         max_length=cfg["max_seq_len"], packing=False,
+        max_steps=cfg.get("max_steps", -1),
         report_to=[],  # keep runs fully local & reproducible
     )
     trainer = SFTTrainer(model=model, args=sft_cfg, train_dataset=ds["train"],
                          eval_dataset=ds["validation"], processing_class=tok,
                          peft_config=lora)
-    trainer.train()
+    out = Path(cfg["output_dir"])
+    has_ckpt = bool(list(out.glob("checkpoint-*"))) if out.exists() else False
+    if cfg.get("resume", False) and has_ckpt:
+        trainer.train(resume_from_checkpoint=True)
+    else:
+        trainer.train()
 
     final = Path(cfg["output_dir"]) / "adapter"
     trainer.save_model(str(final))
