@@ -1,18 +1,19 @@
-# Stage 1 — LoRA SFT, tuned for CPU-only local training (no CUDA)
-# Measured ~X s/step on i5-1340P (see README "Local CPU training").
+# Stage 1 — LoRA SFT, CPU-only local training (v2: seq budget fits full plans)
+# v1 used max_seq_len 1024; plan examples need ~1190 tokens (prompt 544 +
+# completion ~650), so the model learned truncated plans. 1280 fixes that.
 model_id: Qwen/Qwen2.5-0.5B-Instruct
 seed: 42
 train_file: data/sft/train.jsonl
 val_file: data/sft/val.jsonl
 output_dir: runs/sft_local
-max_steps: 150          # ~9 min/step measured on i5-1340P CPU → ~22 h
+max_steps: 120          # ~4.5-5 min/step on i5-1340P at seq 1280 → ~10 h
 resume: true            # pick up from runs/sft_local/checkpoint-* if interrupted
 lr: 0.0003
 batch_size: 1
 grad_accum: 16          # effective batch 16
-eval_steps: 50
+eval_steps: 40
 eval_limit: 8           # tiny eval set: CPU eval is expensive
-max_seq_len: 1024
+max_seq_len: 1280
 lora:
   r: 16
   alpha: 32
